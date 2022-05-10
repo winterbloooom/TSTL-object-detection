@@ -1,0 +1,56 @@
+ignore는 프레임을 거의 벗어나 일부만 보이거나 너무 멀어서 검출하고자 하지 않는 거리에 있는 것들을 다 처리
+
+aws(amazon web service)
+
+us-west-2.console.aws.amazon.com
+
+서비스 -> EC2 -> 인스턴스 시작 -> 더 많은 AMI 찾아보기 -> pytorch 검색 -> AWS Marketplace -> aws deep learning AMI(ubuntu 18.04) -> 계속 -> 인스턴스 유형 = p2.xlarge -> 키 페어(로그인) -> 새 키 페어 생성 -> 키 페어 이름은 아무거나, RSA, .pem -> 키페어 생성 -> 생성하면 aws 라는 폴더에 .pem 파일이 생성 -> 키페어에 이 파일이 생성된 것을 볼 수 있음 -> 인스턴스 시작
+
+ssh를 통해 인스턴스에 접속
+
+
+-키파일이 있는 위치로 이동
+cd Documents/aws
+
+-chmod
+chmod 600 filename.pem
+
+-ssh -> ipv4 address는 인스턴스 ID-퍼블릭 IPv4 DNS
+ssh -i filename.pem ubuntu@ipv4 address
+
+
+
+vscode에서도 사용이 가능하다. 
+
+extension -> remote 4가지 설치(containers, ssh, ssh:editing~, wsl) -> remote explorer -> ssh targets -> + 클릭 
+-> ssh -i 경로/filename.pem ubuntu@ipv4 address -> /Users/name/ssh/config
+
+config 파일이 생성됨
+
+ 생성된 ssh targets를 새창으로 열면 접속이 됨
+
+open folder -> 자신의 폴더를 생성하거나 공동 폴더를 만듦
+
+
+
+데이터를 원격으로 이동시킬 때는
+
+scp data.zip ubuntu@ipv4 address:/보내고 싶은 경로
+scp data.zip ubuntu@ipv4 address:/home/ubuntu/newrun/datasets/
+
+
+yolov3-tiny git clone
+git clone yolov3-tiny.git
+
+
+nvidia-smi
+
+
+
+
+에러가 계속 뜰 때는 경로 root로 지정
+
+```bash
+sudo /bin/bash
+conda activate name
+```
