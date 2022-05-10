@@ -13,9 +13,9 @@ class Yolodata(Dataset):
     anno_dir = ""
     file_txt = ""
     # TODO 2 : setting Path
-    train_dir = "C:\\data\\tstl_data"
-    train_txt = "all.txt"
-    valid_dir = "C:\\data\\tstl_eval"
+    train_dir = "../datasets/train/"
+    train_txt = "train.txt"
+    valid_dir = "../datasets/eval/"
     valid_txt = "all.txt"
     class_str = ['left', 'right', 'stop', 'crosswalk', 'uturn', 'traffic_light']
     num_class = None
