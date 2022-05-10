@@ -1,0 +1,21 @@
+<launch>
+
+  <!-- usb_cam -->
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+    <param name="video_device" value="/dev/videoCAM" />
+    <param name="image_width" value="640" />
+    <param name="image_height" value="480" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_frame_id" value="usb_cam" />
+    <param name="autoexposure" value="false" />
+    <param name="exposure" value="80" />
+    <param name="io_method" value="mmap"/>
+  </node>
+
+  <node name="yolov3_trt_ros" pkg="yolov3_trt_ros" type="trt_detection.py" output="screen" />
+  <node name="trt_driver" pkg="yolov3_trt_ros" type="trt_drive.py" output="screen" />
+
+    <!-- motor node -->
+  <include file="$(find xycar_motor)/launch/xycar_motor.launch" />
+
+</launch>

@@ -1,0 +1,13 @@
+model/__pycache__/*
+.vscode
+*.pyc
+log
+output/*
+test_code.py
+*.onnx
+*.csv
+darknet53.conv.74
+pretrained/
+__pycache__/
+*.npy
+*.dll
