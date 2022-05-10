@@ -23,9 +23,10 @@ class Trainer:
         self.iter = 0
         self.torch_writer = torch_writer
         self.yololoss = YoloLoss(self.device, self.model.n_classes, hparam['ignore_cls'])
+        # TODO 6 : Change Optimizer
         self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
         self.class_str = class_str
-
+        
         
         if checkpoint is not None:
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -38,7 +39,7 @@ class Trainer:
                                                             # gamma는 1/2씩 줄이겠다고 할당
                                                             
         #scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, self.max_batch-hparam['burn_in'])
-        
+        #TODO 4 : select scheduler
         #warm-up learning rate scheduler
         self.lr_scheduler = LearningRateWarmUP(optimizer=self.optimizer,
                                                warmup_iteration=hparam['burn_in'],

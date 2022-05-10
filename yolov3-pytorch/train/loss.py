@@ -69,7 +69,7 @@ class YoloLoss(nn.Module):
                     # lcls3 += self.bcellogloss(p_cls3, t3)
         
             lobj += self.bcellogloss(pout[...,4], tobj)
-        
+        # TODO 5 : add loss method
         lcls *= 0.05
         # lcls3 *= 0.05
         lobj *= 1.0

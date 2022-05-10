@@ -11,6 +11,7 @@ from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 from util.tools import minmax2cxcy, xywh2xyxy_np
 
 def get_transformations(cfg_param = None, is_train = None):
+    # TODO 3 : Add Augumentation method
     if is_train:
         data_transform = tf.Compose([AbsoluteLabels(),
                                      FlipAug_tstl(),

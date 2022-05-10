@@ -12,6 +12,7 @@ class Yolodata(Dataset):
     file_dir = ""
     anno_dir = ""
     file_txt = ""
+    # TODO 2 : setting Path
     train_dir = "C:\\data\\tstl_data"
     train_txt = "all.txt"
     valid_dir = "C:\\data\\tstl_eval"
