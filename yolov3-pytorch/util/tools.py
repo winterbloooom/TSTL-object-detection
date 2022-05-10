@@ -419,7 +419,6 @@ def parse_model_config(path):
     module_defs = []
     type_name = None
     for line in lines:
-        print(type_name)
         if line.startswith('['):  # This marks the start of a new block
             type_name = line[1:-1].rstrip()
             if type_name == "net":
