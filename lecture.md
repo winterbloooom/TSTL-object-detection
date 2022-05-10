@@ -83,7 +83,7 @@ residual block을 사용하여 이전의 특징을 연산의 결과와 결합해
 
 ## code
 
-training할 때는 arg
+training arg
 - checkpoint : 중간에 학습을 중단하여 **중간단계**에서 다시 시작하고 싶을 때 저장된 pth파일을 불러와 이 weight부터 진행이 된다.
 - pretrained : darknet weight를 넣어서 사용하면 된다. 
 
@@ -106,6 +106,8 @@ torch2onnx
 
 <br>
 
+<br>
+
 tensorboard
 ```bash
 tensorboard --logdir=./output --port 8888
@@ -113,7 +115,7 @@ tensorboard --logdir=./output --port 8888
 
 <br>
 
-코드 흐름
+yolov3-pytorch 코드 흐름 및 
 1. cfg param 불러와서 저장
 2. gpu check
 3. args.mode에 따라 코드
@@ -180,7 +182,7 @@ tensorboard --logdir=./output --port 8888
 
 <br>
 
-customizing
+우리가 직접 조정할 만 한 값들
 - config : resolution change, batch size
 - hyperparameter : optimizer, weight decay of SGD, activation
 - augmentation
@@ -192,6 +194,8 @@ customizing
 <br>
 
 <br>
+
+---
 
 # export
 
