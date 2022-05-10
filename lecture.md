@@ -14,7 +14,7 @@ weight가 작은만큼 성능은 당연히 yolov3가 좋지만, 속도면에서�
 
 <br>
 
-<img src="/assets/img/dev/week13/day2/tiny.png">
+<img src="./assets/tiny.png">
 
 헤더가 2개로, output이 2개를 추출한다. 출력의 크기는 입력 사이즈에서 1/32, 1/16 의 shape을 가진다.
 
@@ -36,7 +36,7 @@ yolov3-tiny의 특징으로는 MaxPool2d + ZeroPad2d를 사용한다.
 
 - maxpool2d
 
-<img src="/assets/img/dev/week13/day2/maxpool.png">
+<img src="./assets/maxpool.png">
 
 max값을 추출하려는 size를 정하고, 그 안에서 max값을 뽑아서 출력한다. 아래의 그림은 size가 2일 것이다.
 
