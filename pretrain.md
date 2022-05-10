@@ -174,3 +174,38 @@ output :  [tensor([[[[[nan, nan, nan,  ..., nan, nan, nan],
        grad_fn=<CloneBackward0>)]
 nan nan
 ```
+
+```python
+    class DarkNet53(nn.Module):
+        def forward(self, x):
+            ...
+            print(idx, " : ", x[:,:,:,0])
+
+# ================== #
+
+0  :  tensor([[[nan, nan, nan,  ..., nan, nan, nan],
+         [nan, nan, nan,  ..., nan, nan, nan],
+         [nan, nan, nan,  ..., nan, nan, nan],
+         ...,
+         [nan, nan, nan,  ..., nan, nan, nan],
+         [nan, nan, nan,  ..., nan, nan, nan],
+         [nan, nan, nan,  ..., nan, nan, nan]],
+
+        [[nan, nan, nan,  ..., nan, nan, nan],
+         [nan, nan, nan,  ..., nan, nan, nan],
+```
+
+애초에 입력부터 nan으로 들어간다.
+
+<br>
+
+---
+
+---
+
+애초에 pretrained 는 weights 파일이고, checkpoint가 .pth or .pt인데 내가 pretrained 에 .pth를 넣어서 이상한 듯하다.
+
+checkpoint에 .pt를 넣으니 안맞다.
+
+위의 darknet 사이트에서 weight를 다운받아서 `--pretrained ./yolov3-tiny.weights`를 하면 구동이 된다.
+
