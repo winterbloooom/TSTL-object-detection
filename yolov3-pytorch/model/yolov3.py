@@ -273,7 +273,7 @@ class DarkNet53(nn.Module):
 
         ptr = 0
         for i, (module_def, module) in enumerate(zip(self.module_cfg, self.module_list)):
-            print(i, module_def)
+            # print(i, module_def)
             if i == cutoff:
                 break
             if module_def["type"] == "convolutional":
@@ -315,7 +315,7 @@ class DarkNet53(nn.Module):
                     weights[ptr: ptr + num_w]).view_as(conv_layer.weight)
                 conv_layer.weight.data.copy_(conv_w)
                 ptr += num_w
-                print("total : {}, now {}".format(len(weights), ptr))
+                # print("total : {}, now {}".format(len(weights), ptr))
     
     def save_darknet_weights(self, path, cutoff=-1):
         """
