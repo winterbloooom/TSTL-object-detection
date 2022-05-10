@@ -25,6 +25,8 @@ class Trainer:
         self.yololoss = YoloLoss(self.device, self.model.n_classes, hparam['ignore_cls'])
         # TODO 6 : Change Optimizer
         self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
+        #self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
+        #self.optimizer = optim.NAdam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         self.class_str = class_str
         
         
@@ -93,6 +95,7 @@ class Trainer:
 
             #inference model
             output = self.model(input_img)
+            print("output : " ,output[0])
             
             #compute loss
             loss, loss_list = self.yololoss.compute_loss(pred = output,
@@ -111,6 +114,7 @@ class Trainer:
             if i % 100 == 0:
                 duration = float(time.time() - start_time)
                 latency = self.model.batch / duration
+                print("loss : ", loss.item())
                 print("epoch {} / iter {} lr {:.5f} , loss {:.5f} latency {:.5f}".format(self.epoch, self.iter, get_lr(self.optimizer), loss.item(), calc_time))
                 self.torch_writer.add_scalar("lr", get_lr(self.optimizer), self.iter)
                 self.torch_writer.add_scalar('example/sec', latency, self.iter)
