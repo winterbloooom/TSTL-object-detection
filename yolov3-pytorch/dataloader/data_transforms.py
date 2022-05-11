@@ -15,10 +15,13 @@ def get_transformations(cfg_param = None, is_train = None):
     if is_train:
         data_transform = tf.Compose([AbsoluteLabels(),
                                      FlipAug_tstl(),
-                                     DefaultAug(),
+                                     #PadSquare(),
+                                     #DefaultAug(),
+                                     ImageBaseAug(),
                                      RelativeLabels(),
                                      ResizeImage(new_size = (cfg_param['in_width'], cfg_param['in_height'])),
                                      ToTensor(),])
+
     elif not is_train:
         data_transform = tf.Compose([AbsoluteLabels(),
                                      RelativeLabels(),
@@ -112,12 +115,19 @@ class ImageBaseAug(object):
                 # gaussian blur (sigma between 0 and 3.0),
                 # average/uniform blur (kernel size between 2x2 and 7x7)
                 # median blur (kernel size between 3x3 and 11x11).
+                # iaa.OneOf([
+                #     iaa.GaussianBlur((0, 0.3)),
+                #     iaa.AverageBlur(k=(0, 2)),
+                #     iaa.MedianBlur(k=(1, 3)),
+                # ]),
                 iaa.OneOf([
-                    iaa.GaussianBlur((0, 2.0)),
-                    iaa.AverageBlur(k=(2, 5)),
-                    iaa.MedianBlur(k=(3, 11)),
+                    # Color
+                    iaa.AddToHue((-10, 10)),
+                    iaa.AddToHueAndSaturation((-10, 10)),
+                    iaa.AddToSaturation((-10, 10))
+                    #iaa.Grayscale(alpha=(0.0, 1.0))
                 ]),
-                # Sharpen each image, overlay the result with the original
+                # Sharpen each image, overlay tdhe result with the original
                 # image using an alpha between 0 (no sharpening) and 1
                 # (full sharpening effect).
                 sometimes(iaa.Sharpen(alpha=(0, 0.5), lightness=(0.75, 1.5))),
@@ -129,6 +139,8 @@ class ImageBaseAug(object):
                 sometimes(iaa.Multiply((0.9, 1.1), per_channel=0.5)),
                 # Improve or worsen the contrast of images.
                 # sometimes(iaa.contrast.LinearContrast((0.5, 2.0), per_channel=0.5)),
+                iaa.AddToBrightness((-40, 60)), # (mul=(0.5, 1.5), add=(-30, 30))
+                iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.5)),         
             ],
             # do all of the above augmentations in random order
             random_order=True
@@ -205,10 +217,9 @@ class ImgAug(object):
 class DefaultAug(ImgAug):
     def __init__(self, ):
         self.augmentations = iaa.Sequential([
-            iaa.Sharpen((0.0, 0.1)),
-            iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.0)),
-            iaa.AddToBrightness((-40, 60)),
-            iaa.AddToHue((-10, 10)),
+            iaa.Sharpen((0.0, 0.1)),                # 
+            iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.5)),         
+            iaa.AddToBrightness((-40, 60)), # (mul=(0.5, 1.5), add=(-30, 30))
         ])
 
 #flip augmentation for tstl dataset
@@ -218,6 +229,7 @@ class FlipAug_tstl(ImgAug):
         self.augmentations = iaa.Sequential([
                 iaa.Fliplr(0.5, name='fliplr_tstl')
         ])
+
 
 class AbsoluteLabels(object):
     def __init__(self, ):
