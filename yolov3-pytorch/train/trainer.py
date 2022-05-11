@@ -25,8 +25,8 @@ class Trainer:
         self.torch_writer = torch_writer
         self.yololoss = YoloLoss(self.device, self.model.n_classes, hparam['ignore_cls'])
         # TODO 6 : Change Optimizer
-        self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
-        #self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
+        #self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
+        self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         #self.optimizer = optim.NAdam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         self.class_str = class_str
         
