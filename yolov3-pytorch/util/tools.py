@@ -175,24 +175,12 @@ def show_img(img_data, text):
     _img_data = np.array(_img_data, dtype=np.uint8)
     print("shape:",_img_data.shape)
     img_data = Image.fromarray(_img_data)
-    draw = ImageDraw.Draw(img_data)
-    font = ImageFont.truetype("arial.ttf",15)
-    cx, cy = 0,0 #_img_data.shape[0] /2, _img_data.shape[1] /2
 
-    
-    #draw text in img
-    # if text is not None:
-    #     draw.text((cx,cy),text, (0) , font)
-    directory="C:/Users/dogu/Desktop/temp/AddToSaturation/"
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    
-    img_data.save("{}{}.png".format(directory,text))
-    #img_data.show()
-    # plt.imshow(img_data)
-    # plt.show()
+    # directory="./"
+    # if not os.path.exists(directory):
+    #     os.makedirs(directory)
+    # img_data.save("{}{}.png".format(directory,text))
+    # img_data.show()
 
 
 def cxcy2minmax(box):

@@ -15,7 +15,9 @@ def get_transformations(cfg_param = None, is_train = None):
     if is_train:
         data_transform = tf.Compose([AbsoluteLabels(),
                                      FlipAug_tstl(),
-                                     DefaultAug(),
+                                     #PadSquare(),
+                                     #DefaultAug(),
+                                     ImageBaseAug(),
                                      RelativeLabels(),
                                      ResizeImage(new_size = (cfg_param['in_width'], cfg_param['in_height'])),
                                      ToTensor(),])
@@ -113,10 +115,17 @@ class ImageBaseAug(object):
                 # gaussian blur (sigma between 0 and 3.0),
                 # average/uniform blur (kernel size between 2x2 and 7x7)
                 # median blur (kernel size between 3x3 and 11x11).
+                # iaa.OneOf([
+                #     iaa.GaussianBlur((0, 0.3)),
+                #     iaa.AverageBlur(k=(0, 2)),
+                #     iaa.MedianBlur(k=(1, 3)),
+                # ]),
                 iaa.OneOf([
-                    iaa.GaussianBlur((0, 2.0)),
-                    iaa.AverageBlur(k=(2, 5)),
-                    iaa.MedianBlur(k=(3, 11)),
+                    # Color
+                    iaa.AddToHue((-10, 10)),
+                    iaa.AddToHueAndSaturation((-10, 10)),
+                    iaa.AddToSaturation((-10, 10))
+                    #iaa.Grayscale(alpha=(0.0, 1.0))
                 ]),
                 # Sharpen each image, overlay tdhe result with the original
                 # image using an alpha between 0 (no sharpening) and 1
@@ -130,13 +139,15 @@ class ImageBaseAug(object):
                 sometimes(iaa.Multiply((0.9, 1.1), per_channel=0.5)),
                 # Improve or worsen the contrast of images.
                 # sometimes(iaa.contrast.LinearContrast((0.5, 2.0), per_channel=0.5)),
+                iaa.AddToBrightness((-40, 60)), # (mul=(0.5, 1.5), add=(-30, 30))
+                iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.5)),         
             ],
             # do all of the above augmentations in random order
             random_order=True
         )
 
     def __call__(self, data):
-        seq_det = self.augmentations.to_deterministic()
+        seq_det = self.seq.to_deterministic()
         image, label = data
         image = seq_det.augment_images([image])[0]
         return image, label
@@ -203,23 +214,17 @@ class ImgAug(object):
 
         return img, boxes
 
-class DefaultAug(ImageBaseAug):
+class DefaultAug(ImgAug):
     def __init__(self, ):
         self.augmentations = iaa.Sequential([
             iaa.Sharpen((0.0, 0.1)),                # 
-            iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(2.0, 3.0)),         
+            iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.5)),         
             iaa.AddToBrightness((-40, 60)), # (mul=(0.5, 1.5), add=(-30, 30))
-            
-            # Color
-            #iaa.AddToHue((-100, 100)),
-            # iaa.AddToHueAndSaturation , HSV
-            iaa.AddToSaturation((-100, 100))
-            #iaa.Grayscale(alpha=(0.0, 1.0))
         ])
 
 #flip augmentation for tstl dataset
 #if flip occured, change label of the box between "left sign" and "right sign"
-class FlipAug_tstl(ImageBaseAug):
+class FlipAug_tstl(ImgAug):
     def __init__(self, ):
         self.augmentations = iaa.Sequential([
                 iaa.Fliplr(0.5, name='fliplr_tstl')
