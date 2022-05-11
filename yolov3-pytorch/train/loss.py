@@ -67,7 +67,6 @@ class YoloLoss(nn.Module):
                     #         t3[tc, 2] = 1
                     # p_cls3 = torch.cat((torch.sum(ps[...,5:8], 1).view(-1,1) / 3, torch.sum(ps[...,8:11], 1).view(-1,1) / 3, torch.sum(ps[...,11:], 1).view(-1,1) / 2),dim=1)
                     # lcls3 += self.bcellogloss(p_cls3, t3)
-            print("{}, {}".format(self.bcellogloss(pout[...,4], tobj).item(), self.mseloss(pout[...,4], tobj).item()))
             lobj += self.bcellogloss(pout[...,4], tobj)
             # sys.exit(1)
         # TODO 5 : add loss method
