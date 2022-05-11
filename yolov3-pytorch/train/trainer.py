@@ -1,4 +1,5 @@
 import time, os
+from sklearn.metrics import accuracy_score
 import torch
 import torch.optim as optim
 import torch.utils.data
@@ -24,8 +25,8 @@ class Trainer:
         self.torch_writer = torch_writer
         self.yololoss = YoloLoss(self.device, self.model.n_classes, hparam['ignore_cls'])
         # TODO 6 : Change Optimizer
-        self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
-        #self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
+        #self.optimizer = optim.SGD(model.parameters(), lr=hparam['lr'], momentum=hparam['momentum'], weight_decay=hparam['decay'])
+        self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         #self.optimizer = optim.NAdam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         self.class_str = class_str
         
@@ -54,7 +55,7 @@ class Trainer:
             self.model.train()
             loss = self.run_iter()
             self.epoch += 1
-            if self.epoch % 50 == 0:
+            if self.epoch % 20 == 0:
                 checkpoint_path = os.path.join("./output", "model_epoch" + str(self.epoch) + ".pth")
                 torch.save({'epoch': self.epoch,
                             'iteration': self.iter,
@@ -66,7 +67,7 @@ class Trainer:
                 self.model.eval()
                 self.run_eval()
             # if iteration is greater than max_iteration, break
-            if self.max_batch <= self.iter:
+            if self.max_batch <= self.epoch:
                 break
 
     def run_iter(self):
@@ -95,7 +96,6 @@ class Trainer:
 
             #inference model
             output = self.model(input_img)
-            print("output : " ,output[0])
             
             #compute loss
             loss, loss_list = self.yololoss.compute_loss(pred = output,
@@ -114,10 +114,16 @@ class Trainer:
             if i % 100 == 0:
                 duration = float(time.time() - start_time)
                 latency = self.model.batch / duration
-                print("loss : ", loss.item())
-                print("epoch {} / iter {} lr {:.5f} , loss {:.5f} latency {:.5f}".format(self.epoch, self.iter, get_lr(self.optimizer), loss.item(), calc_time))
+                # output = [batch, anchors, grid_h, grid_w, box_attrib]
+                # len(output[...,:]) = 11, bbox[4] + obj[1] + score[6]
+                # score = output[...,5:]
+                # print(score.shape)
+                # acc = accuracy_score(targets)
+                
+                print("epoch {} / iter {} lr {:.5f} , loss {:.5f} latency {:.5f}" \
+                    .format(self.epoch, self.iter, get_lr(self.optimizer), loss.item(), calc_time))
                 self.torch_writer.add_scalar("lr", get_lr(self.optimizer), self.iter)
-                self.torch_writer.add_scalar('example/sec', latency, self.iter)
+                self.torch_writer.add_scalar('latency', latency, self.iter)
                 self.torch_writer.add_scalar('total_loss', loss, self.iter)
                 loss_name = ['total_loss','obj_loss', 'cls_loss', 'box_loss']
                 for ln, ls in zip(loss_name, loss_list):

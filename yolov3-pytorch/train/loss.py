@@ -16,6 +16,7 @@ class YoloLoss(nn.Module):
         self.mseloss = nn.MSELoss(reduction='sum').to(device)
         self.bceloss = nn.BCELoss(reduction='sum').to(device)
         self.bcellogloss = nn.BCEWithLogitsLoss(pos_weight=torch.tensor([1.0], device=device)).to(device)
+        self.celoss = nn.CrossEntropyLoss().to(device)
         self.softmax = nn.Softmax(dim=1).to(device)
         self.num_class = num_class
         self.lambda_xy = 2.5
@@ -56,7 +57,7 @@ class YoloLoss(nn.Module):
                     t[range(num_targets), tcls[pidx]] = 1
                     lcls += self.bcellogloss(ps[:,5:], t)
 
-                    # #3 class loss
+                    # #3 class group loss
                     # t3 = torch.zeros_like(ps[...,5:8], device=self.device)
                     # for tc in range(tcls[pidx].shape[0]):
                     #     if tcls[pidx][tc].item() < 3:
@@ -67,9 +68,7 @@ class YoloLoss(nn.Module):
                     #         t3[tc, 2] = 1
                     # p_cls3 = torch.cat((torch.sum(ps[...,5:8], 1).view(-1,1) / 3, torch.sum(ps[...,8:11], 1).view(-1,1) / 3, torch.sum(ps[...,11:], 1).view(-1,1) / 2),dim=1)
                     # lcls3 += self.bcellogloss(p_cls3, t3)
-            print("{}, {}".format(self.bcellogloss(pout[...,4], tobj).item(), self.mseloss(pout[...,4], tobj).item()))
             lobj += self.bcellogloss(pout[...,4], tobj)
-            # sys.exit(1)
         # TODO 5 : add loss method
         lcls *= 0.05
         # lcls3 *= 0.05
