@@ -103,8 +103,6 @@ class Trainer:
 
             #inference model
             output = self.model(input_img)
-            print("output : " ,output[0])
-            
             #compute loss
             loss, loss_list = self.yololoss.compute_loss(pred = output,
                                                         targets = targets,
