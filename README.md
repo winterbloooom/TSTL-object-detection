@@ -39,10 +39,10 @@ pretrained model쓴다면
 ### 계획 및 진행 예정 사항
 
 분담
-- add dataset size : 1
-- augmentation : 1
-- loss : 1
-- pretrained model file : 1
+- augmentation : 주천
+- loss : 재호
+- ros : 은기
+- aws : 형석
 
 <br>
 
