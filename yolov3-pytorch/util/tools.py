@@ -173,10 +173,10 @@ def show_img(img_data, text):
     
     _img_data = np.transpose(_img_data,[1,2,0])
     _img_data = np.array(_img_data, dtype=np.uint8)
-    print("shape:",_img_data.shape)
+    #print("shape:",_img_data.shape)
     img_data = Image.fromarray(_img_data)
 
-    # directory="./"
+    # directory="C:/Users/dogu/Desktop/temp/ImgAug_f/"
     # if not os.path.exists(directory):
     #     os.makedirs(directory)
     # img_data.save("{}{}.png".format(directory,text))
