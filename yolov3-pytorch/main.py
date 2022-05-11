@@ -71,9 +71,11 @@ def collate_fn(batch):
 def train(cfg_param = None, using_gpus = None):
     #Train dataloader
     transforms = get_transformations(cfg_param, is_train = True)
+
     train_data = Yolodata(is_train=True,
                           transform=transforms,
                           cfg_param = cfg_param)
+    
     train_loader = DataLoader(train_data, 
                               batch_size=cfg_param['batch'],
                               num_workers=0,
@@ -82,6 +84,7 @@ def train(cfg_param = None, using_gpus = None):
                               shuffle=True,
                               collate_fn=collate_fn,
                               worker_init_fn=worker_seed_set)
+
     #evaluation dataloader
     eval_transforms = get_transformations(cfg_param, is_train = False)
     eval_data = Yolodata(is_train = False,
@@ -95,6 +98,9 @@ def train(cfg_param = None, using_gpus = None):
                                  shuffle = False,
                                  collate_fn=collate_fn,
                                  worker_init_fn=worker_seed_set)
+
+    
+
 
     #Get OD model
     model = DarkNet53(args.cfg, cfg_param)

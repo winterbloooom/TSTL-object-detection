@@ -1,3 +1,4 @@
+from re import I
 import time, os
 import torch
 import torch.optim as optim
@@ -28,6 +29,9 @@ class Trainer:
         #self.optimizer = optim.Adam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         #self.optimizer = optim.NAdam(model.parameters(), lr=hparam['lr'], weight_decay = hparam['decay'])
         self.class_str = class_str
+        
+        print("num_train_image:",len(train_loader)*hparam['batch'])
+        
         
         
         if checkpoint is not None:
@@ -68,7 +72,7 @@ class Trainer:
             # if iteration is greater than max_iteration, break
             if self.max_batch <= self.iter:
                 break
-
+    
     def run_iter(self):
         #torch.autograd.set_detect_anomaly(True)
         for i, batch in enumerate(self.train_loader):
@@ -76,7 +80,11 @@ class Trainer:
             if batch is None:
                 continue
             input_img, targets, anno_path = batch
-            
+            # TODO 10
+            #print("shape:",input_img.shape)
+            show_img(input_img.to("cpu").numpy(),i)
+
+            #sys.exit(1)
             # show the input image and bounding boxes on it
 
             # input_wh = [input_img.shape[3], input_img.shape[2]]
