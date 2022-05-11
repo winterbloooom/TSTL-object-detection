@@ -80,8 +80,6 @@ lane detection의 경우 교차로에서 차선이 없어지거나 이상하게 
 
 ### 계획 및 진행 예정 사항
 
-
-
 <br>
 
 <br>
@@ -89,3 +87,5 @@ lane detection의 경우 교차로에서 차선이 없어지거나 이상하게 
 ## day 5/12
 
 hyperparameter 조정은 5/12일 진행 예정
+
+pytorch -> tensorRT 해서 추론까지 수행해보기
