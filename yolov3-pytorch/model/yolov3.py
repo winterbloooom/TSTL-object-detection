@@ -189,7 +189,7 @@ class DarkNet53(nn.Module):
             elif info['type'] == 'maxpool':
                 _pad = int(int(info['size']) - 2)
                 if int(info['stride']) == 1:
-                    submodule = nn.Sequential(nn.ZeroPad2d((1,0,1,0)),
+                    submodule = nn.Sequential(nn.ConstantPad2d((0,1,0,1),-50),
                                               nn.MaxPool2d(kernel_size=int(info['size']), stride=int(info['stride']), padding=_pad))
                     modules.add_module('layer_'+str(layer_idx)+'_maxpool',
                                         submodule)
