@@ -8,6 +8,72 @@ from yolov3_trt.msg import BoundingBoxes, BoundingBox
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
+### PID
+class PID():
+  def __init__(self,kp,ki,kd):
+    self.kp = kp
+    self.ki = ki
+    self.kd = kd
+    self.p_error = 0.0
+    self.i_error = 0.0
+    self.d_error = 0.0
+
+  def pid_control(self, cte):
+    self.d_error = cte-self.p_error
+    self.p_error = cte
+    self.i_error += cte
+    self.angle =  self.kp*self.p_error + self.ki*self.i_error + self.kd*self.d_error
+    
+    return self.angle
+
+
+### 이동평균 필터 상수
+k = 0                               # k번 째 수 의미
+preAvg = 0                          # 이전의 평균 값
+N = 5                               # 슬라이딩 윈도우 크기
+c_buf = np.zeros(N + 1)             # 슬라이딩 윈도우
+
+# 이동 평균 필터
+def movAvgFilter(c_pos):
+    global k, preAvg, c_buf, N
+    if k == 0:
+        c_buf = c_pos*np.ones(N + 1)
+        k, preAvg = 1, c_pos
+        
+    for i in range(0, N):
+        c_buf[i] = c_buf[i + 1]
+    
+    c_buf[N] = c_pos
+    avg = preAvg + (c_pos - c_buf[0]) / N
+    preAvg = avg
+    return int(round(avg))
+
+### Stanley Method
+## https://velog.io/@legendre13/Stanley-Method
+## https://github.com/zhm-real/MotionPlanning
+def stanley():
+    return 
+# def get_steer_angle(curr_position, l_slope, r_slope):
+#     # Lane tracking algorithm here
+
+#     k = 1.0
+
+#     if -0.2 < curr_position < 0.2 :  # 좀 더 천천히 조향해도 괜찮은 상황
+#         k = 1.0
+    
+#     elif curr_position > 0.4 or curr_position < -0.4 :  # 신속하게 가운데로 들어와야 함
+#         k = 4.0
+        
+#     else:   # 그 중간의 경우 계수는 linear 변화
+#         k = 20.0 * abs(curr_position) - 3.0
+
+#     steer_angle = k * math.atan(curr_position)* 180 / math.pi
+
+#     return steer_angle
+
+
+
+
 class Detect:
     def __init__(self):
         rospy.Subscriber('/yolov3_trt_ros/detections', BoundingBoxes, self.bbox_callback, queue_size=1)
@@ -43,7 +109,8 @@ class Detect:
         self.can_trust = False  # 탐지한 박스들을 믿을 수 있는가. False이면 박스 아무것도 없다 보고 차선 탐지만 하면 됨
 
         ### 신호 탐지 변수들
-        self.light_color = "red"    # "red", "green", "orange"
+        self.light_color = "red"    # "red", "green"
+        self.light_color_distinguish = 230
 
     def bbox_callback(self, msg):
         for box in msg.bounding_boxes:
@@ -191,7 +258,24 @@ class Detect:
     def traffic_light_color(self):
         # self.light_color에 색 str로 부여
         # TODO 형석 오라버니 여기에 채워주세요
-        pass
+        # pass
+        img = self.image ## TODO: img 불러오는 거 이거 맞지요!?
+        red_green_mask = cv2.inRange(img, (117, 110, 74), (179, 240, 255)) # 빨간색과 초록색 구별하는 필터
+        result_red_green = cv2.bitwise_and(img, img, mask=red_green_mask)
+        
+        breakcheck = False
+        for i in range(result_red_green.shape[0]):
+            for j in range(result_red_green.shape[1]):
+                if result_red_green[i][j][1] > self.light_color_distinguish: # 기본은 230
+                    self.light_color = "red"
+                    breakcheck = True
+                    break
+            if(breakcheck == True):
+                break
+        if(breakcheck == False):
+            self.light_color = "green"
+        
+        
 
 
 class Drive:
@@ -325,7 +409,7 @@ def main():
                 ### 불 색깔 구별
                 if detect.light_color == "red":
                     drive.drive_stop()
-                elif detect.light_color == "orange":
+                elif detect.light_color == "orange": ## TODO: 지금 orange 나오면 그냥 red로 인식함. 노란불에선 멈추게 안전 운전으로 해서 따로 구별필요 없을듯?
                     pass
                 else:
                     drive.drive_normal(target_angle)
