@@ -29,28 +29,16 @@ class PID():
 ### Stanley Method
 ## https://velog.io/@legendre13/Stanley-Method
 ## https://github.com/zhm-real/MotionPlanning
-def stanley():
-    return 
-# def get_steer_angle(curr_position, l_slope, r_slope):
-#     # Lane tracking algorithm here
+class stanley():
+    def __init__(self, lane_mid_pos):
+        self.lane_mid_pos = lane_mid_pos
+        self.k = 1
+        self.v = 2
 
-#     k = 1.0
-
-#     if -0.2 < curr_position < 0.2 :  # 좀 더 천천히 조향해도 괜찮은 상황
-#         k = 1.0
-    
-#     elif curr_position > 0.4 or curr_position < -0.4 :  # 신속하게 가운데로 들어와야 함
-#         k = 4.0
-        
-#     else:   # 그 중간의 경우 계수는 linear 변화
-#         k = 20.0 * abs(curr_position) - 3.0
-
-#     steer_angle = k * math.atan(curr_position)* 180 / math.pi
-
-#     return steer_angle
-
-
-
+    def control(self, lane_mid_pos):
+        cte = 320 - lane_mid_pos
+        cte = np.arctan2(self.k * cte, self.v)
+        return cte
 
 class Detect:
     def __init__(self):
@@ -378,6 +366,8 @@ class MovingAverageFilter:
 # drive 쪽에서 정지는 상관 없는데 normal 쪽은 한 번 pub하고 돌아오도록 수정해야 함 // DONE
 # 라인 필터링 기능 넣자. slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가. 한쪽에만 +, 한쪽에만 - 있어야 하는데 섞여있다던가 제외시키도록
 
+def pi2angle(cte):
+    return 50 / 180 * cte
 
 def pixel_to_angle(pixel):
     # input_max = 640, input_min = 0
@@ -411,10 +401,13 @@ def main():
         if lane_mid_pos == -1:
             lane_mid_pos = detect.prev_mid  # lane_mid_pos가 -1이면 예외처리
 
-        error_pixel = 320 - lane_mid_pos
+        st = stanley()
+        cte = st.control(lane_mid_pos)
+        fixed_angle = pi2angle(cte)
+        # error_pixel = 320 - lane_mid_pos
 
-        error_angle = pixel_to_angle(error_pixel)   # pixel(cam frame) -> angle(servo)
-        fixed_angle = 제어기(error_angle)  # TODO 만들기!
+        # error_angle = pixel_to_angle(error_pixel)   # pixel(cam frame) -> angle(servo)
+        # fixed_angle = 제어기(error_angle)  # TODO 만들기!
 
         angle_maf.add_data(fixed_angle)
         target_angle = angle_maf.get_data()
