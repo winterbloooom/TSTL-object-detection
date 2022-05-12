@@ -155,7 +155,9 @@ class Detect:
             return -1
 
         left_tilt, right_tilt= self.filter_lines(lines) # 왼쪽으로 기울어짐(직선의 우측 차선) / 오른쪽으로 기울어짐(직선의 좌측 차선)
-        
+        #XXX DrawLane
+        self.DrawLane(left_tilt)
+        self.DrawLane(right_tilt)
         if self.obj_id == 0:    #좌회전
             left_pos = self.select_left_lane(left_tilt)
             lane_mid_pos = left_pos + self.lane_half
@@ -184,6 +186,19 @@ class Detect:
         canny = cv2.Canny(np.unit8(blur), self.canny_thres1, self.canny_thres2)
         roi = canny[self.roi_x : self.roi_x + self.roi_x, 0 : 640]
         return roi
+
+    #XXX def DrawLane
+    def DrawLane(self, lines):
+        #line=[slope, b]
+        for line in lines:
+            m, b =line
+            y = self.roi_h / 2
+            
+            b+=self.roi_x 
+            x1 = (480 - b) / float(m)
+            x2 = (240 - b) / float(m)
+            #XXX : line visualization
+            cv2.line(self.image, (int(x1), 480), (int(x2), 240), (255, 0, 0), 1)
 
 
     def filter_lines(self, lines):
