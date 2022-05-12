@@ -171,7 +171,6 @@ class Detect:
         #XXX 화면 실행
         cv2.imshow('view', self.image)
 
-        # TODO prev_mid 갱신은 main 함수 가서 map 함수 하기 직전에 혹은 maf 다 한 뒤 다시 pixel로 바꿔서 변경
         if abs(self.prev_mid - lane_mid_pos) > self.min_pos_gap:
             lane_mid_pos = self.prev_mid    # 이동평균 적용된 값이 prev_mid에 있음(만약에 한참동안이나 prev가 업데이트 안되었다면??? --> 이동평균필터)
             return self.prev_mid
@@ -207,10 +206,9 @@ class Detect:
                     b = self.find_vertical_mid(slope, x1, y1, x2, y2)
                     right_tilt.append([slope, b]) # 오른쪽으로 기울어짐
 
-        left_tilt.sort(key=lambda x:x[1])#
+        left_tilt.sort(key=lambda x:x[1])
         right_tilt.sort(key=lambda x:x[1])
 
-        # TODO 합치는 부분 빠졌음
         cur_line = left_tilt[0]
         for i in range(1, len(left_tilt)):
             if abs(cur_line[1] - left_tilt[i][1]) < self.line_thick:
@@ -220,20 +218,18 @@ class Detect:
             else:
                 left_tilt_filtered.append(cur_line)
                 cur_line = left_tilt[i]
-        left_tilt_filtered.append(cur_line) # 마지막 라인 추가
+        left_tilt_filtered.append(cur_line) # 마지막 라인 추가하는 부분
         
-
-
-
-            if (left_tilt[i][1] - left_tilt[i+1]) < self.line_thick:
-                처리하기
+        cur_line = right_tilt[0]
+        for i in range(1, len(right_tilt)):
+            if abs(cur_line[1] - right_tilt[i][1]) < self.line_thick:
+                slope_avg = (cur_line[0] + right_tilt[i][0]) / 2
+                b_avg = (cur_line[1] + right_tilt[i][1]) / 2
+                cur_line = [slope_avg, b_avg]
             else:
-                left_tilt_filtered.append(left_tilt[i+1])
-        
-        right_tilt_filtered.append(right_tilt[0])
-        for i in range(len(right_tilt) - 1):
-            if (right_tilt[i][1] - right_tilt[i+1]) > self.line_thick:
-                right_tilt_filtered.append(right_tilt[i+1])
+                right_tilt_filtered.append(cur_line)
+                cur_line = right_tilt[i]
+        right_tilt_filtered.append(cur_line)
         
         return left_tilt_filtered, right_tilt_filtered
 
@@ -300,7 +296,7 @@ class Drive:
         if self.motor_msg.speed < self.default_speed:
             cur_speed = self.motor_msg.speed
             while cur_speed >= self.default_speed:
-                cur_speed += 1   # TODO 속도 증가 폭 조정하기
+                cur_speed += 1
                 self.motor_msg.speed = cur_speed
                 self.motor_msg.angle = target_angle
                 self.motor_pub.publish(self.motor_msg)
@@ -322,7 +318,7 @@ class Drive:
         self.drive_mode = "Stop"
         remain_speed = self.motor_msg.speed
         while remain_speed > 0:
-            remain_speed -= 1   # TODO 속도 감소 폭 조정하기
+            remain_speed -= 1
             self.motor_msg.speed = remain_speed
             self.motor_msg.angle = 0
             self.motor_pub.publish(self.motor_msg)
@@ -344,13 +340,13 @@ class MovingAverageFilter:
 
 # TODO
 # 좌우회전 진입했으면 기울기 다른 경우는 무시
-# 이전 중앙값 저장해뒀으면 너무 달라지면 무시 -> 연속 몇 번 이상치이면 무시하도록
-# 표지판 좌우회전 잡힌 거로 기울기 하나만 뽑도록 함(구현함. 섬세한 수정 남음)
-#    -> 좌회전이면 왼쪽 차선 따라가도록 stanley처럼
+# 이전 중앙값 저장해뒀으면 너무 달라지면 무시 -> 연속 몇 번 이상치이면 무시하도록 // DONE
+# 표지판 좌우회전 잡힌 거로 기울기 하나만 뽑도록 함 // DONE
+#    -> 좌회전이면 왼쪽 차선 따라가도록
 # PID이든 Stanley든 제어 아직 없음
 # imshow로 화면 출력
 # 몇 번 이상 누적되면 탐지하는 기능 아직 없음
-# 몇 번 이상 벗어나면 prev_mid 갱신하는 기능 없음
+# 몇 번 이상 벗어나면 prev_mid 갱신하는 기능 없음 // DONE
 # drive 쪽에서 정지는 상관 없는데 normal 쪽은 한 번 pub하고 돌아오도록 수정해야 함
 """
 라인 필터링 기능 넣자.
@@ -398,6 +394,7 @@ def main():
 
         angle_maf.add_data(fixed_angle)
         target_angle = angle_maf.get_data()
+
         # XXX getTrackbarPos
         min_pos_gap = cv2.getTrackbarPos('min_pos_gap','trackbar')
         min_box_area = cv2.getTrackbarPos('min_box_area','trackbar')
@@ -408,9 +405,6 @@ def main():
         
         detect.set_param(min_pos_gap,min_box_area,min_probability,
                         light_color_distinguish,min_mid_to_b,line_thick)
-
-        mav.add_data(fixed_angle)
-        target_angle = mav.get_data()
 
         ### 탐지된 표지판에 따라 주행 모드 결정
         if detect.can_trust:        # True이면 표지판 잡은 것
