@@ -101,7 +101,7 @@ class Detect:
         cv2.createTrackbar('light_color_distinguish','trackbar', 200, 255, lambda x : x)
         cv2.createTrackbar('min_mid_to_b','trackbar', 40, 60, lambda x : x)   
         cv2.createTrackbar('line_thick','trackbar', 10, 30, lambda x : x)
-         
+
 
     #XXX 필요한 파라미터 추가
     def set_param(self, min_pos_gap,min_box_area,min_probability,
@@ -295,12 +295,24 @@ class Drive:
         self.drive_mode = "Straight"
         if self.motor_msg.speed < self.default_speed:
             cur_speed = self.motor_msg.speed
-            while cur_speed >= self.default_speed:
+            for _ in range(5):
+                if cur_speed >= self.default_speed:
+                    break
                 cur_speed += 1
                 self.motor_msg.speed = cur_speed
                 self.motor_msg.angle = target_angle
                 self.motor_pub.publish(self.motor_msg)
                 rospy.sleep(0.1)
+
+            # 밑에대로 가면 중간에 회전각 변경 안되고 계속 그대로 유지하며 감.
+            # 따라서 일정 시간만 속도 올리고 drive_normal을 나가서 다시 main의 while문으로 가야 함
+
+            # while cur_speed >= self.default_speed:
+            #     cur_speed += 1
+            #     self.motor_msg.speed = cur_speed
+            #     self.motor_msg.angle = target_angle
+            #     self.motor_pub.publish(self.motor_msg)
+            #     rospy.sleep(0.1)
         else:
             self.motor_msg.speed = self.default_speed
             self.motor_msg.angle = target_angle
@@ -323,6 +335,7 @@ class Drive:
             self.motor_msg.angle = 0
             self.motor_pub.publish(self.motor_msg)
             rospy.sleep(0.1)
+
 
 class MovingAverageFilter:
     def __init__(self, n):
@@ -347,13 +360,9 @@ class MovingAverageFilter:
 # imshow로 화면 출력
 # 몇 번 이상 누적되면 탐지하는 기능 아직 없음
 # 몇 번 이상 벗어나면 prev_mid 갱신하는 기능 없음 // DONE
-# drive 쪽에서 정지는 상관 없는데 normal 쪽은 한 번 pub하고 돌아오도록 수정해야 함
-"""
-라인 필터링 기능 넣자.
-slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
-한쪽에만 +, 한쪽에만 - 있어야 하는데 섞여있다던가
-제외시키도록
-"""
+# drive 쪽에서 정지는 상관 없는데 normal 쪽은 한 번 pub하고 돌아오도록 수정해야 함 // DONE
+# 라인 필터링 기능 넣자. slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가. 한쪽에만 +, 한쪽에만 - 있어야 하는데 섞여있다던가 제외시키도록
+
 
 def pixel_to_angle(pixel):
     # input_max = 640, input_min = 0
