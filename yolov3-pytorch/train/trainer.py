@@ -58,7 +58,7 @@ class Trainer:
             self.model.train()
             loss = self.run_iter()
             self.epoch += 1
-            if self.epoch % 50 == 0:
+            if self.epoch % 30 == 0:
                 checkpoint_path = os.path.join("./output", "model_epoch" + str(self.epoch) + ".pth")
                 torch.save({'epoch': self.epoch,
                             'iteration': self.iter,

@@ -70,10 +70,10 @@ class YoloLoss(nn.Module):
             lobj += self.bcellogloss(pout[...,4], tobj)
             # sys.exit(1)
         # TODO 5 : add loss method
-        lcls *= 0.05
+        lcls *= 0.5
         # lcls3 *= 0.05
         lobj *= 1.0
-        lbox *= 0.5
+        lbox *= 0.05
         
         loss = lcls + lobj + lbox
         loss_list = [loss.item(), lobj.item(), lcls.item(), lbox.item()]
