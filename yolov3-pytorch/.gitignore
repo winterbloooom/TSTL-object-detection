@@ -2,9 +2,9 @@ model/__pycache__/*
 .vscode
 *.pyc
 log
-output/*
+output/Eval*
+*.pth
 test_code.py
-*.onnx
 *.csv
 darknet53.conv.74
 pretrained/
