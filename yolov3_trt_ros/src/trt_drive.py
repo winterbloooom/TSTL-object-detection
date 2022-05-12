@@ -8,6 +8,72 @@ from yolov3_trt.msg import BoundingBoxes, BoundingBox
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
+### PID
+class PID():
+  def __init__(self,kp,ki,kd):
+    self.kp = kp
+    self.ki = ki
+    self.kd = kd
+    self.p_error = 0.0
+    self.i_error = 0.0
+    self.d_error = 0.0
+
+  def pid_control(self, cte):
+    self.d_error = cte-self.p_error
+    self.p_error = cte
+    self.i_error += cte
+    self.angle =  self.kp*self.p_error + self.ki*self.i_error + self.kd*self.d_error
+    
+    return self.angle
+
+
+### 이동평균 필터 상수
+k = 0                               # k번 째 수 의미
+preAvg = 0                          # 이전의 평균 값
+N = 5                               # 슬라이딩 윈도우 크기
+c_buf = np.zeros(N + 1)             # 슬라이딩 윈도우
+
+# 이동 평균 필터
+def movAvgFilter(c_pos):
+    global k, preAvg, c_buf, N
+    if k == 0:
+        c_buf = c_pos*np.ones(N + 1)
+        k, preAvg = 1, c_pos
+        
+    for i in range(0, N):
+        c_buf[i] = c_buf[i + 1]
+    
+    c_buf[N] = c_pos
+    avg = preAvg + (c_pos - c_buf[0]) / N
+    preAvg = avg
+    return int(round(avg))
+
+### Stanley Method
+## https://velog.io/@legendre13/Stanley-Method
+## https://github.com/zhm-real/MotionPlanning
+def stanley():
+    return 
+# def get_steer_angle(curr_position, l_slope, r_slope):
+#     # Lane tracking algorithm here
+
+#     k = 1.0
+
+#     if -0.2 < curr_position < 0.2 :  # 좀 더 천천히 조향해도 괜찮은 상황
+#         k = 1.0
+    
+#     elif curr_position > 0.4 or curr_position < -0.4 :  # 신속하게 가운데로 들어와야 함
+#         k = 4.0
+        
+#     else:   # 그 중간의 경우 계수는 linear 변화
+#         k = 20.0 * abs(curr_position) - 3.0
+
+#     steer_angle = k * math.atan(curr_position)* 180 / math.pi
+
+#     return steer_angle
+
+
+
+
 class Detect:
     def __init__(self):
         rospy.Subscriber('/yolov3_trt_ros/detections', BoundingBoxes, self.bbox_callback, queue_size=1)
