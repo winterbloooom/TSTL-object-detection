@@ -47,7 +47,7 @@ class Detect:
 
     def bbox_callback(self, msg):
         for box in msg.bounding_boxes:
-            self.bboxes = box
+            self.bboxes.append(box)
 
     def img_callback(self, msg):
         self.image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -62,7 +62,7 @@ class Detect:
         for box in self.bboxes:
             area = (box.xmax - box.xmin) * (box.ymax - box.ymin)
             if area < self.min_box_area or box.probability < self.min_probability:
-                pass
+                continue
 
             if max_area < area:
                 max_area = area
@@ -81,7 +81,7 @@ class Detect:
         lines = cv2.HoughLinesP(roi, 1, math.pi / 180, self.hough_thres, self.hough_minLineLen, self.hough_maxLineGap)
         if lines in None:
             # TODO 차선 탐색 안됨 -> 교차로에서 차선 없을 때 이걸로 들어가니까 가던대로 계속 가도록 하자
-            pass
+            return -1
 
         left_tilt, right_tilt= self.filter_lines(lines) # 왼쪽으로 기울어짐(직선의 우측 차선) / 오른쪽으로 기울어짐(직선의 좌측 차선)
         
@@ -98,10 +98,11 @@ class Detect:
             lane_mid_pos = (right_pos + left_pos) / 2
 
         # TODO prev_mid 갱신은 main 함수 가서 map 함수 하기 직전에 혹은 maf 다 한 뒤 다시 pixel로 바꿔서 변경
-        if abs(self.prev_mid - lane_mid_pos) < self.min_pos_gap:
+        if abs(self.prev_mid - lane_mid_pos) > self.min_pos_gap:
             # self.prev_mid = (self.prev_mid + lane_mid_pos) / 2
             lane_mid_pos = (self.prev_mid + lane_mid_pos) / 2
                 # TODO 만약에 한참동안이나 prev가 업데이트 안되었다면??? --> 이거 방지하려고 일단 평균값으로 처리하긴 했음
+                # TODO 이전 평균을 몇 개 리스트 만들어 저장 -> 평균 내서 그것으로 비교 // prev_mid를 lane_mid로
             return self.prev_mid
         else:
             # self.prev_mid = lane_mid_pos
@@ -109,7 +110,7 @@ class Detect:
 
 
     def process_image(self):
-        gray = cv2.cvtColor()
+        gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (self.kernel_size, self.kernel_size), 0)
         canny = cv2.Canny(np.unit8(blur), self.canny_thres1, self.canny_thres2)
         roi = canny[self.roi_x : self.roi_x + self.roi_x, 0 : 640]
@@ -121,7 +122,6 @@ class Detect:
         right_tilt = []
         left_tilt_filtered = []
         right_tilt_filtered = []
-        result = []
 
         for line in lines:
             x1, y1, x2, y2 = line[0]
@@ -137,8 +137,11 @@ class Detect:
                     b = self.find_vertical_mid(slope, x1, y1, x2, y2)
                     right_tilt.append([slope, b]) # 오른쪽으로 기울어짐
 
-        left_tilt.sort(key=lambda x:x[1])
+        left_tilt.sort(key=lambda x:x[1])#
         right_tilt.sort(key=lambda x:x[1])
+
+        # TODO 합치는 부분 빠졌음
+        # TODO b 구하는 부분 다시 보기
 
         left_tilt_filtered.append(left_tilt[0])
         for i in range(len(left_tilt) - 1):
@@ -207,7 +210,7 @@ class Drive:
                 self.motor_msg.speed = cur_speed
                 self.motor_msg.angle = target_angle
                 self.motor_pub.publish(self.motor_msg)
-                rospy.Rate.sleep(10) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
+                rospy.Rate.sleep(0.1) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
         else:
             self.motor_msg.speed = self.default_speed
             self.motor_msg.angle = target_angle
@@ -218,7 +221,7 @@ class Drive:
         # 속도 줄였다가 회전할 건지. 아니면 normal과 합쳐도 됨
         self.drive_mode = "Rotate" # TODO 왼쪽 오른쪽 나누기
         self.motor_msg.speed = self.default_speed
-        self.motor_msg.angle = self.pixel_to_angle(target_angle)
+        self.motor_msg.angle = target_angle
         self.motor_pub.publish(self.motor_msg)
 
 
@@ -230,7 +233,7 @@ class Drive:
             self.motor_msg.speed = remain_speed
             self.motor_msg.angle = 0
             self.motor_pub.publish(self.motor_msg)
-            rospy.Rate.sleep(10) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
+            rospy.Rate.sleep(0.1) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
 
 class MovingAverageFilter:
     def __init__(self, n):
@@ -286,6 +289,7 @@ def main():
     while not rospy.is_shutdown():
         detect.select_object()  # 가장 믿을만한 객체 선택
         lane_mid_pos = detect.detect_lane()
+            # TODO lane_mid_pos가 -1이면 예외처리
         error_pixel = 320 - lane_mid_pos
 
         error_angle = pixel_to_angle(error_pixel)   # pixel(cam frame) -> angle(servo)
