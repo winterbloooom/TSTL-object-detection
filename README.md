@@ -93,6 +93,21 @@ lane detection의 경우 교차로에서 차선이 없어지거나 이상하게 
 
 ## day 5/12
 
-hyperparameter 조정은 5/12일 진행 예정
+### 예정
+- hyperparameter 조정은 5/12일 진행 예정
+- pytorch -> tensorRT 해서 추론까지 수행해보기
 
-pytorch -> tensorRT 해서 추론까지 수행해보기
+### 수행 사항
+
+- yolov3를 자이카 추론까지 수행 
+  - onnx -> tensorRT가 조금 오래 걸렸으나 수행
+- rosbag을 사용해서 동영상으로 만들어서 화면 확인
+
+### 해야 할 일
+- 신호등 crop
+- right tilt 처리
+- detection 화면이 아닌 drive.py에서 화면을 띄우기
+- 화면 중앙과 인식한 차선의 중앙 화면에 표시
+
+
+
