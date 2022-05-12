@@ -82,7 +82,7 @@ class Trainer:
             input_img, targets, anno_path = batch
             # TODO 10
             #print("shape:",input_img.shape)
-            show_img(input_img.to("cpu").numpy(),i)
+            #show_img(input_img.to("cpu").numpy(),i)
 
             #sys.exit(1)
             # show the input image and bounding boxes on it

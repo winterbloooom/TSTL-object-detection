@@ -16,8 +16,8 @@ def get_transformations(cfg_param = None, is_train = None):
         data_transform = tf.Compose([AbsoluteLabels(),
                                      FlipAug_tstl(),
                                      #PadSquare(),
-                                     #DefaultAug(),
-                                     ImageBaseAug(),
+                                     DefaultAug(),
+                                     #ImageBaseAug(),
                                      RelativeLabels(),
                                      ResizeImage(new_size = (cfg_param['in_width'], cfg_param['in_height'])),
                                      ToTensor(),])
@@ -216,11 +216,22 @@ class ImgAug(object):
 
 class DefaultAug(ImgAug):
     def __init__(self, ):
+        sometimes = lambda aug: iaa.Sometimes(0.3, aug)
         self.augmentations = iaa.Sequential([
-            iaa.Sharpen((0.0, 0.1)),                # 
+            iaa.Sharpen((0.0, 0.1)),                
             iaa.Affine(rotate=(-0, 0), translate_percent=(-0.1, 0.1), scale=(1.0, 2.5)),         
             iaa.AddToBrightness((-40, 60)), # (mul=(0.5, 1.5), add=(-30, 30))
-        ])
+            sometimes(iaa.OneOf([
+                    # Color
+                    iaa.AddToHue((-10, 10)),
+                    iaa.AddToHueAndSaturation((-10, 10)),
+                    iaa.AddToSaturation((-10, 10))
+                    #iaa.Grayscale(alpha=(0.0, 1.0))
+                ])),
+                
+            ],
+        random_order=True
+        )
 
 #flip augmentation for tstl dataset
 #if flip occured, change label of the box between "left sign" and "right sign"
