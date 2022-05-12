@@ -82,6 +82,9 @@ class Detect:
 
         ### 객체 인식 변수들
         self.obj_id = -1 # -1이면 아무것도 검출 안됨
+        #XXX 임시용 maxareabbox 및 클래스 색성 저장 변수
+        #self.obj_bbox=[]
+        #self.color=[(0, 255, 0),(0,128,0),(255,0,0),(128,0,0),(0,255,255),(0,128,128)]
         self.min_box_area = 100 # TODO 임의값임
         self.min_probability = 0.3  # TODO 임의값임
         self.can_trust = False  # 탐지한 박스들을 믿을 수 있는가. False이면 박스 아무것도 없다 보고 차선 탐지만 하면 됨
@@ -89,6 +92,26 @@ class Detect:
         ### 신호 탐지 변수들
         self.light_color = "red"    # "red", "green"
         self.light_color_distinguish = 230
+
+        # XXX createTrackbar, 범위 수정 필요
+        cv2.namedWindow("trackbar")
+        cv2.createTrackbar('min_pos_gap','trackbar', 20, 100, lambda x : x)
+        cv2.createTrackbar('min_box_area','trackbar', 30, 200, lambda x : x)    
+        cv2.createTrackbar('min_probability','trackbar', 0, 10, lambda x : x)
+        cv2.createTrackbar('light_color_distinguish','trackbar', 200, 255, lambda x : x)
+        cv2.createTrackbar('min_mid_to_b','trackbar', 40, 60, lambda x : x)   
+        cv2.createTrackbar('line_thick','trackbar', 10, 30, lambda x : x)
+         
+
+    #XXX 필요한 파라미터 추가
+    def set_param(self, min_pos_gap,min_box_area,min_probability,
+                    light_color_distinguish,min_mid_to_b,line_thick):
+        self.min_pos_gap = min_pos_gap
+        self.min_box_area = min_box_area
+        self.min_probability = min_probability / float(10)
+        self.light_color_distinguish = light_color_distinguish
+        self.min_mid_to_b = min_mid_to_b
+        self.line_thick = line_thick
 
     def bbox_callback(self, msg):
         for box in msg.bounding_boxes:
@@ -100,6 +123,8 @@ class Detect:
     def select_object(self):
         if len(self.bboxes) == 0:
             self.obj_id = -1
+            #XXX temp
+            #self.obj_bbox=[]
 
         max_area = 0
         self.can_trust = False
@@ -115,7 +140,9 @@ class Detect:
 
             self.can_trust = True
         self.obj_id = max_area_obj.id
-
+        #XXX temp
+        #self.obj_bbox = max_area_obj[1:5]
+        #cv2.rectangle(self.image, (self.obj_bbox[0],self.obj_bbox[1]),(self.obj_bbox[2],self.obj_bbox[3]),self.color[self.obj_id], 2)
 
     def detect_lane(self):
         while not self.image.size == (640 * 480 * 3):
@@ -141,6 +168,10 @@ class Detect:
             left_pos = self.select_left_lane(left_tilt) # 오른쪽 차선
             lane_mid_pos = (right_pos + left_pos) / 2
 
+        #XXX 화면 실행
+        cv2.imshow('view', self.image)
+
+        # TODO prev_mid 갱신은 main 함수 가서 map 함수 하기 직전에 혹은 maf 다 한 뒤 다시 pixel로 바꿔서 변경
         if abs(self.prev_mid - lane_mid_pos) > self.min_pos_gap:
             lane_mid_pos = self.prev_mid    # 이동평균 적용된 값이 prev_mid에 있음(만약에 한참동안이나 prev가 업데이트 안되었다면??? --> 이동평균필터)
             return self.prev_mid
@@ -367,6 +398,19 @@ def main():
 
         angle_maf.add_data(fixed_angle)
         target_angle = angle_maf.get_data()
+        # XXX getTrackbarPos
+        min_pos_gap = cv2.getTrackbarPos('min_pos_gap','trackbar')
+        min_box_area = cv2.getTrackbarPos('min_box_area','trackbar')
+        min_probability = cv2.getTrackbarPos('min_probability','trackbar')
+        light_color_distinguish = cv2.getTrackbarPos('light_color_distinguish','trackbar')
+        min_mid_to_b = cv2.getTrackbarPos('min_mid_to_b','trackbar')
+        line_thick = cv2.getTrackbarPos('line_thick','trackbar')
+        
+        detect.set_param(min_pos_gap,min_box_area,min_probability,
+                        light_color_distinguish,min_mid_to_b,line_thick)
+
+        mav.add_data(fixed_angle)
+        target_angle = mav.get_data()
 
         ### 탐지된 표지판에 따라 주행 모드 결정
         if detect.can_trust:        # True이면 표지판 잡은 것
