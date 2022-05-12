@@ -31,6 +31,8 @@ class Detect:
         self.min_slope = 0 # TODO 바꿀 것
         self.max_slope = 10 # TODO 바꿀 것
         self.line_thick = 20    # TODO 임의값
+        self.min_mid_to_b = 50   # TODO 임의값 / 프레임 중앙에서 이 수치 이상 벗어나야 차선으로 인식함
+        self.lane_half = 220    # TODO 임의값 / 450(도로 폭 대략)의 약 절반값
         self.prev_mid = 320
         self.min_pos_gap = 20   # TODO 임의값 / 이전 mid와 지금 mid가 얼마나 차이가 나나
 
@@ -69,14 +71,6 @@ class Detect:
             self.can_trust = True
         self.obj_id = max_area_obj.id
 
-# TODO
-"""
-라인 필터링 기능 넣자.
-slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
-한쪽에만 +, 한쪽에만 - 있어야 하는데 섞여있다던가
-제외시키도록
-"""
-
 
     def detect_lane(self):
         while not self.image.size == (640 * 480 * 3):
@@ -88,43 +82,31 @@ slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
         if lines in None:
             # TODO 차선 탐색 안됨 -> 교차로에서 차선 없을 때 이걸로 들어가니까 가던대로 계속 가도록 하자
             pass
+
+        left_tilt, right_tilt= self.filter_lines(lines) # 왼쪽으로 기울어짐(직선의 우측 차선) / 오른쪽으로 기울어짐(직선의 좌측 차선)
         
-        left_tilt, right_tilt = self.seperate_lines(lines)  # 왼쪽으로 기울어짐(직선의 우측 차선) / 오른쪽으로 기울어짐(직선의 좌측 차선)
+        if self.obj_id == 0:    #좌회전
+            left_pos = self.select_left_lane(left_tilt)
+            lane_mid_pos = left_pos + self.lane_half
+        elif self.obj_id == 1:  # 우회전
+            # TODO 만약에 오른쪽에 차선이 없어서 640으로 right_pos가 들어갔는데 왼쪽 차선은 잡혔다면??
+            right_pos = self.select_right_lane(right_tilt)
+            lane_mid_pos = right_pos - self.lane_half
+        else:    # 직진 차선일 때(정지일 경우는  일단 무시하세요. 지금은 차선 위치만 판단하는 거니까.)
+            right_pos = self.select_right_lane(right_tilt)  # 왼쪽 차선
+            left_pos = self.select_left_lane(left_tilt) # 오른쪽 차선
+            lane_mid_pos = (right_pos + left_pos) / 2
 
-        ##### 여기 아래 막코딩... 수정 대대적으로 필요.
-        line_pos = []
-        # 좌우회전 표지판이 있을 때 -> 한쪽 차선만 씀
-        if self.obj_id == 0:
-            print(len(left_tilt))   # 지금은 left_tilt 안에 2개만 있다고 가정하고 진행
-            for line in left_tilt:
-                m, b = self.get_line_params(left_tilt)  # 두께 처리되어 하나의 선으로 들어감을 가정
-                line_pos.append(self.get_line_pos(m, b))
-        elif self.obj_id == 1:
-            print(len(right_tilt))   # 지금은 right_tilt 안에 2개만 있다고 가정하고 진행
-            for line in right_tilt:
-                m, b = self.get_line_params(right_tilt)  # 두께 처리되어 하나의 선으로 들어감을 가정
-                line_pos.append(self.get_line_pos(m, b))
-        # 직진 차선일 때(정지일 경우는  일단 무시하세요. 지금은 차선 위치만 판단하는 거니까.)
+        # TODO prev_mid 갱신은 main 함수 가서 map 함수 하기 직전에 혹은 maf 다 한 뒤 다시 pixel로 바꿔서 변경
+        if abs(self.prev_mid - lane_mid_pos) < self.min_pos_gap:
+            # self.prev_mid = (self.prev_mid + lane_mid_pos) / 2
+            lane_mid_pos = (self.prev_mid + lane_mid_pos) / 2
+                # TODO 만약에 한참동안이나 prev가 업데이트 안되었다면??? --> 이거 방지하려고 일단 평균값으로 처리하긴 했음
+            return self.prev_mid
         else:
-            for line in left_tilt:  # 이상적일 경우 하나만 나옴
-                m, b = self.get_line_params(left_tilt)  # 두께 처리되어 하나의 선으로 들어감을 가정
-                line_pos.append(self.get_line_pos(m, b))
-            right_pos = sum(line_pos) / len(line_pos)
-            line_pos = []
-            for line in right_tilt:  # 이상적일 경우 하나만 나옴
-                m, b = self.get_line_params(right_tilt)  # 두께 처리되어 하나의 선으로 들어감을 가정
-                line_pos.append(self.get_line_pos(m, b))
-            left_pos = sum(line_pos) / len(line_pos)
-            line_pos = [left_pos, right_pos]
+            # self.prev_mid = lane_mid_pos
+            return lane_mid_pos
 
-        lane_mid = sum(line_pos) / len(line_pos)
-
-        if abs(lane_mid - self.prev_mid) < self.min_pos_gap:
-            pass    # 아직 구현 못함
-
-        # TODO 만약에 한참동안이나 prev가 업데이트 안되었다면???
-
-        return lane_mid
 
     def process_image(self):
         gray = cv2.cvtColor()
@@ -133,9 +115,13 @@ slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
         roi = canny[self.roi_x : self.roi_x + self.roi_x, 0 : 640]
         return roi
 
-    def seperate_lines(self, lines):
+
+    def filter_lines(self, lines):
         left_tilt = []
         right_tilt = []
+        left_tilt_filtered = []
+        right_tilt_filtered = []
+        result = []
 
         for line in lines:
             x1, y1, x2, y2 = line[0]
@@ -145,72 +131,65 @@ slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
             slope = (y2 - y1) / (x2 - x1)
             if self.min_slope < abs(slope) < self.max_slope:
                 if slope < 0:
-                    left_tilt.append(line)
+                    b = self.find_vertical_mid(slope, x1, y1, x2, y2)
+                    left_tilt.append([slope, b])
                 else:
-                    right_tilt.append(line) # 오른쪽으로 기울어짐
-            # TODO 원래 코드에서 middle_thresh 부분 없앴음 크게 이상하면 추가하자
+                    b = self.find_vertical_mid(slope, x1, y1, x2, y2)
+                    right_tilt.append([slope, b]) # 오른쪽으로 기울어짐
 
-        # 선 두께 때문에 두 개의 선으로 된 부분 하나로 합치는 부분 여기 있었으면...
-        # left_tilt.sort(key=lambda x:x[1])   # y1기준으로 정렬
-        # right_tilt.sort(key=lambda x:x[1])
-        # for i in range(len(left_tilt) - 1):
-        #     y_avg = (left_tilt[i][1] + left_tilt[i][3]) / 2
-        #     y_next_avg = (left_tilt[i+1][1] + left_tilt[i+1][3]) / 2
-        #     if abs(y_avg - y_next_avg) < self.line_thick:
+        left_tilt.sort(key=lambda x:x[1])
+        right_tilt.sort(key=lambda x:x[1])
 
-        return left_tilt, right_tilt
+        left_tilt_filtered.append(left_tilt[0])
+        for i in range(len(left_tilt) - 1):
+            if (left_tilt[i][1] - left_tilt[i+1]) > self.line_thick:
+                left_tilt_filtered.append(left_tilt[i+1])
+        
+        right_tilt_filtered.append(right_tilt[0])
+        for i in range(len(right_tilt) - 1):
+            if (right_tilt[i][1] - right_tilt[i+1]) > self.line_thick:
+                right_tilt_filtered.append(right_tilt[i+1])
+        
+        return left_tilt_filtered, right_tilt_filtered
 
-    def get_line_params(self, lines):
-        x_sum = 0
-        y_sum = 0.0
-        m_sum = 0.0
 
-        size = len(lines)
-        # if size == 0:
-        #     return 0, 0
+    def find_vertical_mid(self, slope, x1, y1, x2, y2):
+        x_avg = (x1 + x2) / 2
+        y_avg = (y1 + y2) / 2
+        b_temp = -slope * x_avg + y_avg # y=ax+b에서 a가 slope, b가 b_temp임. 현재.
+        return ((self.roi_h / 2 ) - b_temp) / slope  # roi의 가운데의 x좌표
 
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
 
-            x_sum += x1 + x2
-            y_sum += y1 + y2
-            m_sum += float(y2 - y1) / float(x2 - x1)
-
-        x_avg = x_sum / (size * 2)
-        y_avg = y_sum / (size * 2)
-        m = m_sum / size
-        b = y_avg - m * x_avg
-
-        return m, b
-
-    def get_line_pos(self, m, b):
-        ### m, b를 받아 픽셀 내에서 차선의 위치(y)값 구함
-        if m == 0 and b == 0:
-            # TODO 예외처리 어떻게 할지?
-            pass
+    def select_right_lane(self, right_tilt):
+        b_sum = 0
+        cnt = 0
+        for line in right_tilt:
+            if line[1] > 320 + self.min_mid_to_b:
+                b_sum += line[1]
+                cnt += 1
+        if cnt == 0:
+            return 640
         else:
-            y = self.roi_h / 2
-            pos = (y - b) / m
+            return (b_sum / cnt)
 
-        return pos
+
+    def select_left_lane(self, left_tilt):
+        b_sum = 0
+        cnt = 0
+        for line in left_tilt:
+            if line[1] < 320 - self.min_mid_to_b:
+                b_sum += line[1]
+                cnt += 1
+        if cnt == 0:
+            return 0
+        else:
+            return b_sum / cnt
 
     def traffic_light_color(self):
         # self.light_color에 색 str로 부여
         # TODO 형석 오라버니 여기에 채워주세요
         pass
 
-    def mb_to_xy(self, m, b):
-
-        return [x1, y1, x2, y2]
-
-    def xy_to_mb(self, coor):
-        x1, y1, x2, y2 = coor
-        m = float(y2 - y1) / float(x2 - x1)
-
-        x_avg = (x2 + x1) / 2
-        y_avg = (y2 + y1) / 2
-        b = y_avg - m * x_avg
-        return m, b
 
 class Drive:
     def __init__(self):
@@ -219,35 +198,29 @@ class Drive:
         self.default_speed = 15
         self.drive_mode = "None"
     
-    def pixel_to_angle(self, target_pixel):
-        # input_max = 640, input_min = 0
-        # output_max = 50, output_min = -50
-
-        target_angle = (target_pixel - 0) * (50 - (-50)) / (640 - 0) + (-50)
-        return target_angle
-
-    def drive_normal(self, target_pixel):
+    def drive_normal(self, target_angle):
         self.drive_mode = "Straight"
         if self.motor_msg.speed < self.default_speed:
             cur_speed = self.motor_msg.speed
             while cur_speed >= self.default_speed:
                 cur_speed += 1   # TODO 속도 증가 폭 조정하기
                 self.motor_msg.speed = cur_speed
-                self.motor_msg.angle = self.pixel_to_angle(target_pixel)
+                self.motor_msg.angle = target_angle
                 self.motor_pub.publish(self.motor_msg)
                 rospy.Rate.sleep(10) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
         else:
             self.motor_msg.speed = self.default_speed
-            self.motor_msg.angle = self.pixel_to_angle(target_pixel)
+            self.motor_msg.angle = target_angle
             self.motor_pub.publish(self.motor_msg)
 
-    
-    def drive_rotate(self, target_pixel):
+
+    def drive_rotate(self, target_angle):
         # 속도 줄였다가 회전할 건지. 아니면 normal과 합쳐도 됨
         self.drive_mode = "Rotate" # TODO 왼쪽 오른쪽 나누기
         self.motor_msg.speed = self.default_speed
-        self.motor_msg.angle = self.pixel_to_angle(target_pixel)
+        self.motor_msg.angle = self.pixel_to_angle(target_angle)
         self.motor_pub.publish(self.motor_msg)
+
 
     def drive_stop(self):
         self.drive_mode = "Stop"
@@ -259,8 +232,19 @@ class Drive:
             self.motor_pub.publish(self.motor_msg)
             rospy.Rate.sleep(10) # TODO 시간 따라 줄일 것인지? rospy.Rate 설정해서?
 
+class MovingAverageFilter:
+    def __init__(self, n):
+        self.n = n  # 큐 사이즈
+        self.queue = []
 
-        
+    def add_data(self, x):
+        if len(self.queue) >= self.n:
+            self.queue = self.queue[1:] + [x]
+        else:
+            self.queue.append(x)
+
+    def get_data(self):
+        return sum(self.data)/len(self.data)
 
 # TODO
 # 좌우회전 진입했으면 기울기 다른 경우는 무시
@@ -269,55 +253,101 @@ class Drive:
 #    -> 좌회전이면 왼쪽 차선 따라가도록 stanley처럼
 # PID이든 Stanley든 제어 아직 없음
 # imshow로 화면 출력
+# 몇 번 이상 누적되면 탐지하는 기능 아직 없음
+# 몇 번 이상 벗어나면 prev_mid 갱신하는 기능 없음
+# drive 쪽에서 정지는 상관 없는데 normal 쪽은 한 번 pub하고 돌아오도록 수정해야 함
+"""
+라인 필터링 기능 넣자.
+slope가 (오른쪽 기욺 -> 왼쪽 기욺) 형태로 있다던가
+한쪽에만 +, 한쪽에만 - 있어야 하는데 섞여있다던가
+제외시키도록
+"""
+
+def pixel_to_angle(pixel):
+    # input_max = 640, input_min = 0
+    # output_max = 50, output_min = -50
+
+    angle = (pixel - 0) * (50 - (-50)) / (640 - 0) + (-50)
+    return angle
 
 def main():
     rospy.init_node('trt_drive', anonymous=False)
 
     detect = Detect()
     drive = Drive()
+    mav = MovingAverageFilter()
     rate = rospy.Rate(10)
+
+    obj_name = "None"
+
+    rospy.sleep(3) # 노드 연결될 때까지 잠시 대기
+    print("\n===== START =====\n")
 
     while not rospy.is_shutdown():
         detect.select_object()  # 가장 믿을만한 객체 선택
-        pos = detect.detect_lane()
-        error_pixel = 320 - pos
-        target_pixel = 제어기(error_pixel)
+        lane_mid_pos = detect.detect_lane()
+        error_pixel = 320 - lane_mid_pos
+
+        error_angle = pixel_to_angle(error_pixel)   # pixel(cam frame) -> angle(servo)
+        fixed_angle = 제어기(error_angle)  # TODO 만들기!
+
+        mav.add_data(fixed_angle)
+        target_angle = mav.get_data()
 
         ### 탐지된 표지판에 따라 주행 모드 결정
         if detect.can_trust:        # True이면 표지판 잡은 것
             if detect.obj_id == 0:
                 ### 좌회전
-                drive.drive_rotate(target_pixel)
+                obj_name = "Left"
+                drive.drive_rotate(target_angle)
             elif detect.obj_id == 1:
                 ###우회전
-                drive.drive_rotate(target_pixel)
+                obj_name = "Right"
+                drive.drive_rotate(target_angle)
             elif detect.obj_id == 2:
                 ### stop
-                drive.drive_stop(target_pixel)
+                obj_name = "Stop"
+                drive.drive_stop(target_angle)
             elif detect.obj_id == 3:
                 ### crosswalk
-                drive.drive_stop(target_pixel)
+                obj_name = "Crosswalk"
+                drive.drive_stop(target_angle)
             elif detect.obj_id == 4:
                 ### u-turn
                 pass
             elif detect.obj_id == 5:
                 ### traffic light
+                obj_name = "Trafficlight"
                 ### 불 색깔 구별
                 if detect.light_color == "red":
                     drive.drive_stop()
                 elif detect.light_color == "orange":
                     pass
                 else:
-                    drive.drive_normal(target_pixel)
+                    drive.drive_normal(target_angle)
         else:
-            drive.drive_normal(target_pixel)
+            obj_name = "None"
+            drive.drive_normal(target_angle)
 
         ####print status###
+        print("Detected Object      {}".format(obj_name))
+        if obj_name == "Trafficlight":
+            print("                     ({})".format(detect.light_color))
 
-        print(drive.drive_mode)
-        print(drive.motor_msg.speed)
-        print(drive.motor_msg.angle)
-    
+        print("---------------------------------------------")
+        print("Prev Mid             {}".format(detect.prev_mid))
+        print("Curr Mid             {}".format(lane_mid_pos))
+        print("CTE                  {}".format(error_pixel))
+        print("Error Angle          {}".format(error_angle))
+        print("After PID            {}".format(fixed_angle))
+        print("After MAF            {}".format(target_angle))
+
+        print("---------------------------------------------")
+        print("Drive Mode           {}".format(drive.drive_mode))
+        print("Speed                {}".format(drive.motor_msg.speed))
+        print("Angle                {}".format(drive.motor_msg.angle))
+
+        print("\n")
         rospy.sleep()
 
 if __name__ == "__main__":
