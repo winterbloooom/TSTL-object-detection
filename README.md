@@ -1,115 +1,38 @@
-# TSTL project
+# Traffic Sign & Traffic Light Project
 
-New Run 팀
+## Project Information
 
-윤형석, 이주천, 윤재호, 한은기
+- **개요**: 다양한 교통표지(신호등, 횡단보도, 좌/우회전, 정지)를 딥러닝 모델을 통해 실시간으로 인지하고, 해당 표지 지시대로 미니카를 주행하는 프로젝트.
+- **일정**: 2022.05.09. - 13.
 
---- 
+> K-Digital Training 프로그래머스 자율주행 데브코스 3기의 프로젝트입니다.
 
-<br>
-
-## day 5/10
-
-### 회의 및 수행 사항
-
-#### data labeling
-
-- yolo label 툴로 진행 완료
-
-#### 추가 데이터셋은 아직
-
-- 추가 데이터셋을 오픈소스를 다운받을지, 자이카 조이스틱해서 핸드메이드 데이터셋 만들지 고민
-
-<br>
-
-<br>
-
-#### hyperparameter
-
-pretrained model쓴다면
-- learning_rate : 0.001
-- scheduler : x
-
-아니면,
-- learning_rate : 0.01
-- scheduler : step 5 마다 learning rate 갱신
-
-<br>
-
-### 계획 및 진행 예정 사항
-
-분담
-- augmentation : 주천
-- loss : 재호
-- ros : 은기
-- aws : 형석
-
-<br>
-
-<br>
+|미션 주행 트랙|트랙 주행 장면|인식 결과|
+|:---:|:---:|:---:|
+|<img src="https://user-images.githubusercontent.com/69252153/228587412-b64ac5f4-1a12-4b41-8bb6-5d0779dd26fc.png" style="zoom:50%">|<img src="https://user-images.githubusercontent.com/69252153/228587721-995ebdfd-08ad-4876-a116-3dde68fdfe34.png" style="zoom:25%">|<img src="https://user-images.githubusercontent.com/69252153/228588397-c6d941c3-d9f5-4a94-98d1-0c152598dcdb.png" style="zoom:25%">|
 
 
-## day 5/11
+## 주요 수행 내용
 
-### 회의 및 수행 사항
+🪄 **데이터 라벨링부터 모델 학습, 주행까지 전 과정을 경험**
+  - 약 960장의 이미지 데이터 라벨링 & YOLOv3 모델 학습
+  - 모델 최적화: Jetson Nano에서 실시간 모델 구동을 위하여 ONNX, TensorRT 변환 과정을 거침
 
-분담
-- augmentation : 주천
-- loss : 재호
-- ros : 은기
-- aws : 형석
 
--\>
+🚥 **교통 표지에 따른 주행 기능 구현**
+  - 인식한 교통 표지에 따라 차선 위를 주행할 수 있도록 ROS 프로그래밍
+  - 좌/우회전 구간 진입 시, 표지를 벗어나면 직진하는 오류 발생. 추후 코드 리뷰를 통해 오류를 수정함
 
-**드라이브가 시급하다고 판단되어 다시 분담**
 
-- lane detection : 은기
-- 신호등 color 인식 : 형석
-- data_augmentation : 주천
-- loss : 재호
+## Team
 
-4시반까지 data_aug랑 loss merge하고, lane_detection 부분으로 넘어가기
-
-<br>
-
-lane detection의 경우 교차로에서 차선이 없어지거나 이상하게 생기게 탐지가 된다. 그래서 표지판을 인식해서 기울기 값 범위를 지정해서 조향각 제어
-
-객체가 여러개 잡히는 경우 bbox threshold를 정해서 일정 사이즈 이하의 bbox는 무시, 가장 큰 bbox만을 탐지하도록 알고리즘을 짠다.
-
-<br>
-
-### 계획 및 진행 예정 사항
-
-담당 파트
-- 차선 인식 : 은기
-- 신호등 알고리즘 : 형석
-- 조향 제어기 : 재호
-- 시각화 및 트랙바 : 주천
-- 자이카 포팅 : 주천, 재호
-
-<br>
-
-<br>
-
-## day 5/12
-
-### 예정
-- hyperparameter 조정은 5/12일 진행 예정
-- pytorch -> tensorRT 해서 추론까지 수행해보기
-
-### 수행 사항
-
-- yolov3를 자이카 추론까지 수행 
-  - onnx -> tensorRT가 조금 오래 걸렸으나 수행
-- rosbag을 사용해서 동영상으로 만들어서 화면 확인
-
-### 해야 할 일
-- 신호등 crop
-- right tilt 처리
-- detection 화면이 아닌 drive.py에서 화면을 띄우기
-- 화면 중앙과 인식한 차선의 중앙 화면에 표시
-- 회전이 되지 않음, 와이?,,, 차선을 인식하지 못한 탓인지 조향각이 부족한지 판단해야함
-- 신호등! 위가 빨강, 아래가 초록,,
+|윤형석|이주천|윤재호|한은기|
+|---|---|---|---|
+|<img src="https://avatars.githubusercontent.com/u/37795618?v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/8746262?&v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/33013780?&v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/69252153?v=4" alt="img" style="zoom:20%"/>|
 
 
 
+## Directories
+- `1-yolov3-pytorch` : 표지를 인식하기 위한 YOLOv3 모델
+- `2-yolov3_onnx_rt` : Jetson에서 모델을 구동하기 위한 최적화. ONNX, Tensor RT 사용
+- `3-yolov3_trt_ros` : 표지를 인식하고, 인식한 표지의 지시에 따라 트랙 위를 주행(`trt_drive.py`)하는 코드
