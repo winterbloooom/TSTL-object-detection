@@ -1,28 +1,17 @@
 # Traffic Sign & Traffic Light Project
 
-## Project Information
-
 - **개요**: 다양한 교통표지(신호등, 횡단보도, 좌/우회전, 정지)를 딥러닝 모델을 통해 실시간으로 인지하고, 해당 표지 지시대로 미니카를 주행하는 프로젝트.
 - **일정**: 2022.05.09. - 13.
 
 > K-Digital Training 프로그래머스 자율주행 데브코스 3기의 프로젝트입니다.
 
-<div style="display: flex; flex-direction: row; gap: 0;">
-<figure style="flex:1">
-<img src="https://user-images.githubusercontent.com/69252153/228587412-b64ac5f4-1a12-4b41-8bb6-5d0779dd26fc.png">
-<figcaption style="color: grey; font-size: small; text-align: left;">미션 주행 트랙</figcaption>
-</figure>
+|미션 주행 트랙|트랙 주행 장면|
+|:---:|:---:|
+|<img src="https://user-images.githubusercontent.com/69252153/228587412-b64ac5f4-1a12-4b41-8bb6-5d0779dd26fc.png" style="width:100%">|<img src="https://user-images.githubusercontent.com/69252153/228587721-995ebdfd-08ad-4876-a116-3dde68fdfe34.png" style="width:50%">|
 
-<figure style="flex:1">
-<img src="https://user-images.githubusercontent.com/69252153/228587721-995ebdfd-08ad-4876-a116-3dde68fdfe34.png">
-<figcaption style="color: grey; font-size: small; text-align: left;">트랙 주행 장면</figcaption>
-</figure>
-</div>
-
-<figure>
-<img src="https://user-images.githubusercontent.com/69252153/228588397-c6d941c3-d9f5-4a94-98d1-0c152598dcdb.png">
-<figcaption style="color: grey; font-size: small; text-align: left;">표지 인식 결과</figcaption>
-</figure>
+|표지 인식 결과|
+|:---:|
+|<img src="https://user-images.githubusercontent.com/69252153/228588397-c6d941c3-d9f5-4a94-98d1-0c152598dcdb.png">|
 
 
 ## 주요 수행 내용
