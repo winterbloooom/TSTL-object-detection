@@ -7,9 +7,22 @@
 
 > K-Digital Training 프로그래머스 자율주행 데브코스 3기의 프로젝트입니다.
 
-|미션 주행 트랙|트랙 주행 장면|인식 결과|
-|:---:|:---:|:---:|
-|<img src="https://user-images.githubusercontent.com/69252153/228587412-b64ac5f4-1a12-4b41-8bb6-5d0779dd26fc.png" style="zoom:50%">|<img src="https://user-images.githubusercontent.com/69252153/228587721-995ebdfd-08ad-4876-a116-3dde68fdfe34.png" style="zoom:25%">|<img src="https://user-images.githubusercontent.com/69252153/228588397-c6d941c3-d9f5-4a94-98d1-0c152598dcdb.png" style="zoom:25%">|
+<div style="display: flex; flex-direction: row; gap: 0;">
+<figure style="flex:1">
+<img src="https://user-images.githubusercontent.com/69252153/228587412-b64ac5f4-1a12-4b41-8bb6-5d0779dd26fc.png">
+<figcaption style="color: grey; font-size: small; text-align: left;">미션 주행 트랙</figcaption>
+</figure>
+
+<figure style="flex:1">
+<img src="https://user-images.githubusercontent.com/69252153/228587721-995ebdfd-08ad-4876-a116-3dde68fdfe34.png">
+<figcaption style="color: grey; font-size: small; text-align: left;">트랙 주행 장면</figcaption>
+</figure>
+</div>
+
+<figure>
+<img src="https://user-images.githubusercontent.com/69252153/228588397-c6d941c3-d9f5-4a94-98d1-0c152598dcdb.png">
+<figcaption style="color: grey; font-size: small; text-align: left;">표지 인식 결과</figcaption>
+</figure>
 
 
 ## 주요 수행 내용
@@ -26,8 +39,8 @@
 
 ## Team
 
-|윤형석|이주천|윤재호|한은기|
-|---|---|---|---|
+|[윤형석](https://github.com/idra79haza)|[이주천](https://github.com/LeeJuCheon)|[윤재호](https://github.com/dkssud8150)|[한은기](https://github.com/winterbloooom)|
+|:---:|:---:|:---:|:---:|
 |<img src="https://avatars.githubusercontent.com/u/37795618?v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/8746262?&v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/33013780?&v=4" alt="img" style="zoom:20%"/>|<img src="https://avatars.githubusercontent.com/u/69252153?v=4" alt="img" style="zoom:20%"/>|
 
 
